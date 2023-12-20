@@ -1,0 +1,63 @@
+name: Build TTF
+on:    
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      VERSION: "15.0.2"
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Dependencies
+      run: |
+        sudo apt install make graphicsmagick libcairo2-dev python3-nototools pngquant zopfli rsync
+
+    - name: Clone Repositories
+      run: |
+        git clone https://src.fedoraproject.org/rpms/twitter-twemoji-fonts.git
+        cd twitter-twemoji-fonts
+        git checkout 78a8615f22996e173b6489b004210f6302cfa456
+        cd ..
+        git clone https://github.com/jdecked/twemoji.git
+        cd twemoji
+        git checkout v${{ env.VERSION }}
+        cd ..
+        git clone https://github.com/googlefonts/noto-emoji.git
+        cd noto-emoji
+        git checkout ac1703e9d7feebbf5443a986e08332b1e1c5afcf
+
+    - name: Patch Noto Emoji
+      run: |
+        cd noto-emoji
+        patch -p1 -i ../twitter-twemoji-fonts/noto-emoji-use-system-pngquant.patch
+        patch -p1 -i ../twitter-twemoji-fonts/noto-emoji-build-all-flags.patch
+        patch -p1 -i ../twitter-twemoji-fonts/noto-emoji-use-gm.patch
+
+    - name: Prepare Noto Emoji
+      run: |
+        cd noto-emoji
+        mv NotoColorEmoji.tmpl.ttx.tmpl Twemoji.tmpl.ttx.tmpl
+        sed -i 's/Noto Color Emoji/Twemoji/; s/NotoColorEmoji/Twemoji/; s/Copyright .* Google Inc\./Twitter, Inc and other contributors./; s/ Version .*/ '$VERSION'/; s/.*is a trademark.*//; s/Google, Inc\./Twitter, Inc and other contributors/; s,http://www.google.com/get/noto/,https://github.com/twitter/twemoji/,; s/.*is licensed under.*/      Creative Commons Attribution 4.0 International/; s,http://scripts.sil.org/OFL,http://creativecommons.org/licenses/by/4.0/,' Twemoji.tmpl.ttx.tmpl
+        cd ../twemoji/assets/72x72/
+        for png in *.png; do
+          mv $png emoji_u${png//-/_}
+        done
+
+    - name: Build Noto Emoji
+      run: |
+        cd noto-emoji
+        make EMOJI=Twemoji EMOJI_SRC_DIR=../twemoji/assets/72x72 FLAGS= BODY_DIMENSIONS=76x72
+        mv artefacts/twemoji.ttf Artefacts/Twemoji-$VERSION.ttf
+
+    - name: Commit TTF
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: Build TTF version ${{ env.VERSION }}
+        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        file_pattern: "Artefacts/Twemoji-$VERSION.ttf"
+        
