@@ -68,8 +68,7 @@ jobs:
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/PKGBUILD
         sed -i "s/sha256sums=('[^']*'/sha256sums=('$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')'/g" AUR/PKGBUILD
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/.SRCINFO
-        sed -i "/sha256sums/ {/SKIP/! {/$(sha256sum AUR/75-twemoji.conf | awk '{print $1}')/! s/\(sha256sums = \).*/\1$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')
-/}}" AUR/.SRCINFO
+        sed -i "/sha256sums/ {/SKIP/! {/$(sha256sum AUR/75-twemoji.conf | awk '{print $1}')/! s/\(sha256sums = \).*/\1$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')/}}" AUR/.SRCINFO
         git config user.name 'github-actions[bot]'
         git config user.email 'github-actions[bot]@users.noreply.github.com'
         git add AUR/PKGBUILD AUR/.SRCINFO
