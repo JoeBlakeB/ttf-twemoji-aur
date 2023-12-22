@@ -15,7 +15,7 @@ jobs:
 
     - name: Set up Dependencies
       run: |
-        sudo apt install make graphicsmagick libcairo2-dev python3-nototools pngquant zopfli rsync
+        sudo apt install make graphicsmagick libcairo2-dev python3-nototools pngquant zopfli rsync fonttools
 
     - name: Clone Repositories
       run: |
