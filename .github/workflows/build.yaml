@@ -10,8 +10,6 @@ jobs:
       VERSION: "15.0.2"
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
 
     - name: Set up Dependencies
       run: |
@@ -42,7 +40,7 @@ jobs:
       run: |
         cd noto-emoji
         mv NotoColorEmoji.tmpl.ttx.tmpl Twemoji.tmpl.ttx.tmpl
-        sed -i 's/Noto Color Emoji/Twemoji/; s/NotoColorEmoji/Twemoji/; s/Copyright .* Google Inc\./Twitter, Inc and other contributors./; s/ Version .*/ '$VERSION'/; s/.*is a trademark.*//; s/Google, Inc\./Twitter, Inc and other contributors/; s,http://www.google.com/get/noto/,https://github.com/twitter/twemoji/,; s/.*is licensed under.*/      Creative Commons Attribution 4.0 International/; s,http://scripts.sil.org/OFL,http://creativecommons.org/licenses/by/4.0/,' Twemoji.tmpl.ttx.tmpl
+        sed -i 's/Noto Color Emoji/Twemoji/; s/NotoColorEmoji/Twemoji/; s/Copyright .* Google Inc\./Twitter, Inc and other contributors./; s/ Version .*/ '$VERSION'/; s/.*is a trademark.*//; s/Google, Inc\./Twitter, Inc and other contributors/; s,http://www.google.com/get/noto/,https://github.com/jdecked/twemoji/,; s/.*is licensed under.*/      Creative Commons Attribution 4.0 International/; s,http://scripts.sil.org/OFL,http://creativecommons.org/licenses/by/4.0/,' Twemoji.tmpl.ttx.tmpl
         cd ../twemoji/assets/72x72/
         for png in *.png; do
           mv $png emoji_u${png//-/_}
@@ -51,13 +49,29 @@ jobs:
     - name: Build Noto Emoji
       run: |
         cd noto-emoji
+        ln -s $(which add_vs_cmap) $(which add_vs_cmap).py
         make EMOJI=Twemoji EMOJI_SRC_DIR=../twemoji/assets/72x72 FLAGS= BODY_DIMENSIONS=76x72
-        mv artefacts/twemoji.ttf Artefacts/Twemoji-$VERSION.ttf
+        mv Twemoji.ttf Twemoji-${{ env.VERSION }}.ttf
 
-    - name: Commit TTF
-      uses: stefanzweifel/git-auto-commit-action@v5
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        commit_message: Build TTF version ${{ env.VERSION }}
-        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        file_pattern: "Artefacts/Twemoji-$VERSION.ttf"
-        
+        tag_name: {{ env.VERSION }}
+        release_name: Twemoji {{ env.VERSION }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./Twemoji-{{ env.VERSION }}.ttf
+        asset_name: Twemoji-{{ env.VERSION }}.ttf
+        asset_content_type: application/x-font-ttf
+      
