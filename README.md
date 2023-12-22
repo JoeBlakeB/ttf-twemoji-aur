@@ -1,6 +1,6 @@
 # AUR: ttf-twemoji
 
-The files for the `ttf-twemoji` AUR package.
+The files for the `ttf-twemoji` AUR package built from [jdecked's twemoji repository](https://github.com/jdecked/twemoji).
 
 This project builds Twemoji as a TrueType font. In particular, it is usable on modern Linux (either desktop or mobile) as well as other Unix-like distributions.
 

@@ -6,14 +6,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      VERSION: "15.0.3"
-
     steps:
 
     - name: Set up Dependencies
       run: |
         sudo apt install make graphicsmagick libcairo2-dev python3-nototools pngquant zopfli rsync fonttools
+
+    - name: Clone This Repository
+      run: |
+        git clone https://github.com/JoeBlakeB/ttf-twemoji-aur
+
+    - name: Get Versions
+      run: |
+        VERSION=$(curl -s https://api.github.com/repos/jdecked/twemoji/releases/latest | grep tag_name | cut -d '"' -f 4)
+        VERSION=${VERSION:1}
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        cd ttf-twemoji-aur
+        PREVIOUS_VERSION=$(git describe --tags --abbrev=0)
 
     - name: Clone Repositories
       run: |
@@ -52,6 +61,17 @@ jobs:
         sudo ln -s $(which add_vs_cmap) $(which add_vs_cmap).py
         make EMOJI=Twemoji EMOJI_SRC_DIR=../twemoji/assets/72x72 FLAGS= BODY_DIMENSIONS=76x72
         mv Twemoji.ttf Twemoji-${{ env.VERSION }}.ttf
+
+    - name: Bump PKGBUILD and SRCINFO
+      run: \
+        cd ttf-twemoji-aur
+        sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/PKGBUILD
+        sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/.SRCINFO
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+        git add AUR/PKGBUILD AUR/.SRCINFO
+        git commit -m "Bump to $VERSION"
+        git push
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
