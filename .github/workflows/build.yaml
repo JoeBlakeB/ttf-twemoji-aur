@@ -60,13 +60,16 @@ jobs:
         cd noto-emoji
         sudo ln -s $(which add_vs_cmap) $(which add_vs_cmap).py
         make EMOJI=Twemoji EMOJI_SRC_DIR=../twemoji/assets/72x72 FLAGS= BODY_DIMENSIONS=76x72
-        mv Twemoji.ttf Twemoji-${{ env.VERSION }}.ttf
+        mv Twemoji.ttf ../Twemoji-${{ env.VERSION }}.ttf
 
     - name: Bump PKGBUILD and SRCINFO
       run: \
         cd ttf-twemoji-aur
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/PKGBUILD
+        sed -i "s/sha256sums=('[^']*'/sha256sums=('$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')'/g" AUR/PKGBUILD
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/.SRCINFO
+        sed -i "/sha256sums/ {/SKIP/! {/$(sha256sum AUR/75-twemoji.conf | awk '{print $1}')/! s/\(sha256sums = \).*/\1$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')
+/}}" AUR/.SRCINFO
         git config user.name 'github-actions[bot]'
         git config user.email 'github-actions[bot]@users.noreply.github.com'
         git add AUR/PKGBUILD AUR/.SRCINFO
@@ -77,7 +80,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./noto-emoji/Twemoji-${{ env.VERSION }}.ttf
+        file: ./Twemoji-${{ env.VERSION }}.ttf
         asset_name: Twemoji-${{ env.VERSION }}.ttf
         tag: ${{ env.VERSION }}
         overwrite: true
