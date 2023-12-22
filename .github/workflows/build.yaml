@@ -49,7 +49,7 @@ jobs:
     - name: Build Noto Emoji
       run: |
         cd noto-emoji
-        ln -s $(which add_vs_cmap) $(which add_vs_cmap).py
+        sudo ln -s $(which add_vs_cmap) $(which add_vs_cmap).py
         make EMOJI=Twemoji EMOJI_SRC_DIR=../twemoji/assets/72x72 FLAGS= BODY_DIMENSIONS=76x72
         mv Twemoji.ttf Twemoji-${{ env.VERSION }}.ttf
 
