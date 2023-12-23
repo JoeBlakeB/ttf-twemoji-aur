@@ -63,7 +63,7 @@ jobs:
         mv Twemoji.ttf ../Twemoji-${{ env.VERSION }}.ttf
 
     - name: Bump PKGBUILD and SRCINFO
-      run: \
+      run: |
         cd ttf-twemoji-aur
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/PKGBUILD
         sed -i "s/sha256sums=('[^']*'/sha256sums=('$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')'/g" AUR/PKGBUILD
