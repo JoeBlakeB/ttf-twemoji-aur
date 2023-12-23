@@ -23,6 +23,7 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         cd ttf-twemoji-aur
         PREVIOUS_VERSION=$(git describe --tags --abbrev=0)
+        echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
 
     - name: Clone Repositories
       run: |
