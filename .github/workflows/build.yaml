@@ -65,14 +65,19 @@ jobs:
     - name: Bump PKGBUILD and SRCINFO
       run: |
         cd ttf-twemoji-aur
+        echo "Bumping PKGBUILD to $VERSION"
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/PKGBUILD
+        echo "Updating the checksum in PKGBUILD"
         sed -i "s/sha256sums=('[^']*'/sha256sums=('$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')'/g" AUR/PKGBUILD
+        echo "Bumping SRCINFO to $VERSION"
         sed -i "s/$PREVIOUS_VERSION/$VERSION/g" AUR/.SRCINFO
+        echo "Updating the checksum in SRCINFO"
         sed -i "/sha256sums/ {/SKIP/! {/$(sha256sum AUR/75-twemoji.conf | awk '{print $1}')/! s/\(sha256sums = \).*/\1$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')/}}" AUR/.SRCINFO
+        echo "Committing changes"
         git config user.name 'github-actions[bot]'
         git config user.email 'github-actions[bot]@users.noreply.github.com'
         git add AUR/PKGBUILD AUR/.SRCINFO
-        git commit -m "Bump to $VERSION"
+        git commit -m "Bump to ${{ env.VERSION }}"
         git push
 
     - name: Upload binaries to release
