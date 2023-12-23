@@ -12,16 +12,16 @@ jobs:
       run: |
         sudo apt install make graphicsmagick libcairo2-dev python3-nototools pngquant zopfli rsync fonttools
 
-    - name: Clone This Repository
-      run: |
-        git clone https://github.com/JoeBlakeB/ttf-twemoji-aur
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Get Versions
       run: |
         VERSION=$(curl -s https://api.github.com/repos/jdecked/twemoji/releases/latest | grep tag_name | cut -d '"' -f 4)
         VERSION=${VERSION:1}
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        cd ttf-twemoji-aur
         PREVIOUS_VERSION=$(git describe --tags --abbrev=0)
         echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
 
@@ -65,21 +65,18 @@ jobs:
 
     - name: Bump PKGBUILD and SRCINFO
       run: |
-        cd ttf-twemoji-aur
-        echo "Bumping PKGBUILD to $VERSION"
         sed -i "s/${{ env.PREVIOUS_VERSION }}/${{ env.VERSION }}/g" AUR/PKGBUILD
-        echo "Updating the checksum in PKGBUILD"
-        sed -i "s/sha256sums=('[^']*'/sha256sums=('$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')'/g" AUR/PKGBUILD
-        echo "Bumping SRCINFO to $VERSION"
+        sed -i "s/sha256sums=('[^']*'/sha256sums=('$(sha256sum Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')'/g" AUR/PKGBUILD
         sed -i "s/${{ env.PREVIOUS_VERSION }}/${{ env.VERSION }}/g" AUR/.SRCINFO
-        echo "Updating the checksum in SRCINFO"
-        sed -i "/sha256sums/ {/SKIP/! {/$(sha256sum AUR/75-twemoji.conf | awk '{print $1}')/! s/\(sha256sums = \).*/\1$(sha256sum ../Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')/}}" AUR/.SRCINFO
-        echo "Committing changes"
-        git config user.name 'github-actions[bot]'
-        git config user.email 'github-actions[bot]@users.noreply.github.com'
-        git add AUR/PKGBUILD AUR/.SRCINFO
-        git commit -m "Bump to ${{ env.VERSION }}"
-        git push
+        sed -i "/sha256sums/ {/SKIP/! {/$(sha256sum AUR/75-twemoji.conf | awk '{print $1}')/! s/\(sha256sums = \).*/\1$(sha256sum Twemoji-${{ env.VERSION }}.ttf | awk '{print $1}')/}}" AUR/.SRCINFO
+
+    - name: Commit PKGBUILD and SRCINFO
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: 'AUR/PKGBUILD AUR/.SRCINFO'
+        author_name: 'github-actions[bot]'
+        author_email: 'github-actions[bot]@users.noreply.github.com'
+        message: 'Bump to ${{ env.VERSION }}'
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
